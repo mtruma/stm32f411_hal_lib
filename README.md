@@ -9,7 +9,7 @@ Header only hal lib for stm32f411 mcu.
 📦 Requirements:
  - arm-none-eabi-gcc, arm-none-eabi-g++ compiler
  - openocd or stlink tools for flashing, debugging
- - still requires CMSIS library (this library is still not fully independent)
+ - still requires CMSIS library which you can obtain from example folder or from official website (current implementation is still not fully independent)
 
 🚀 Starting point:
  - open example folder
