@@ -163,11 +163,11 @@ namespace dma
  *
  * @tparam Periph DMA peripheral (DMA1, DMA2).
  */
-template<dma::Peripherals Peripheral>
+template<dma::Peripherals Periph>
 class DmaRegs
 {
     private:
-        inline static constexpr uint32_t BASE_ADDR = static_cast<uint32_t>(Peripheral);
+        inline static constexpr uint32_t BASE_ADDR = static_cast<uint32_t>(Periph);
     public:
         using LowIStatReg   = Register<dma::LISR_Tag,  BASE_ADDR + 0x00>;
         using HighIStatReg  = Register<dma::HISR_Tag,  BASE_ADDR + 0x04>;
