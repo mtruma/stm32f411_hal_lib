@@ -57,6 +57,7 @@ target_include_directories(firmware.elf PRIVATE
     vendor/CMSIS/Device/ST/STM32F4/Include
     vendor/CMSIS/CMSIS/Core/Include
     ./inc
+    ${CMAKE_SOURCE_DIR}/../inc
 )
 
 target_compile_options(firmware.elf PRIVATE
