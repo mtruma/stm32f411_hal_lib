@@ -15,8 +15,8 @@ Header only hal lib for stm32f411 mcu.
  - open example folder
  - create "build" directory in your project folder
  - open "build" folder
- - run: ```bash cmake .. -DCMAKE_C_COMPILER=arm-none-eabi-gcc -DCMAKE_CXX_COMPILER=arm-none-eabi-g++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY ```
- - run: ```bash cmake --build . ```
+ - run: ```cmake .. -DCMAKE_C_COMPILER=arm-none-eabi-gcc -DCMAKE_CXX_COMPILER=arm-none-eabi-g++ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY ```
+ - run: ```cmake --build . ```
 
 📌 Roadmap:
  - [x] Implement base for building Registers and Register masks
