@@ -248,8 +248,7 @@ namespace rcc
 /**
  * @brief RCC(Reset & Clock Control Register) abstraction.
  * 
- * Provides type-safe register access using static member types, allowing
- * fine-grained control of Reset and Clock control registers.
+ * Static class.
  */
  class ResetClockCtrlRegs
  {

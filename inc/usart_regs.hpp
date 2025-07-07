@@ -7,9 +7,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-/**
- * @brief GPIO-related types and utilities for STM32-style GPIO peripheral access.
- */
 namespace usart
 {
     struct SR_Tag {};
@@ -74,12 +71,11 @@ namespace usart
 };
 
 /**
- * @brief GPIO abstraction for a specific port.
+ * @brief USART abstraction.
  * 
- * Provides type-safe register access using static member types, allowing
- * fine-grained control of pin configuration and output/input.
+ * Static class.
  * 
- * @tparam Port GPIO port (A, B, C, etc.).
+ * @tparam Periph USART peripheral (USART1, USART2...).
  */
 template<usart::Peripherals Periph>
 class UsartRegs
@@ -87,7 +83,6 @@ class UsartRegs
     private:
         inline static constexpr uint32_t BASE_ADDR = static_cast<uint32_t>(Periph);
     public:
-        /// @brief Default Constructor (does nothing).
         UsartRegs() = delete;
 
         using StatusReg   = Register<usart::SR_Tag,  BASE_ADDR + 0x00>;

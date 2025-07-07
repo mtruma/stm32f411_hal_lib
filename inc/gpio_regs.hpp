@@ -9,38 +9,38 @@
 #include <type_traits>
 
 /**
- * @brief GPIO-related types and utilities for STM32-style GPIO peripheral access.
+ * @brief GPIO-related types and masks for easier register manipulation
  */
 namespace gpio
 {
-    /// @brief Tag type representing the MODER register (GPIO mode configuration).
+    /// @brief Tag type representing the MODER (GPIO mode configuration).
     struct MODER_Tag {};
 
-    /// @brief Tag type representing the OTYPER register (output type).
+    /// @brief Tag type representing the OTYPER (output type).
     struct OTYPER_Tag {};
 
-    /// @brief Tag type representing the OSPEEDR register (output speed).
+    /// @brief Tag type representing the OSPEEDR (output speed).
     struct OSPEEDR_Tag {};
 
-    /// @brief Tag type representing the PUPDR register (pull-up/pull-down).
+    /// @brief Tag type representing the PUPDR (pull-up/pull-down).
     struct PUPDR_Tag {};
 
-    /// @brief Tag type representing the IDR register (input data).
+    /// @brief Tag type representing the IDR (input data).
     struct IDR_Tag {};
 
-    /// @brief Tag type representing the ODR register (output data).
+    /// @brief Tag type representing the ODR (output data).
     struct ODR_Tag {};
 
-    /// @brief Tag type representing the BSRR register (bit set/reset).
+    /// @brief Tag type representing the BSRR (bit set/reset).
     struct BSRR_Tag {};
 
-    /// @brief Tag type representing the LCKR register (lock configuration).
+    /// @brief Tag type representing the LCKR (lock configuration).
     struct LCKR_Tag {};
 
-    /// @brief Tag type representing the AFRL register (alternate function low).
+    /// @brief Tag type representing the AFRL (alternate function low).
     struct AFRL_Tag {};
 
-    /// @brief Tag type representing the AFRH register (alternate function high).
+    /// @brief Tag type representing the AFRH (alternate function high).
     struct AFRH_Tag {};
 
     /**
@@ -59,7 +59,6 @@ namespace gpio
     /// @brief Enum representing GPIO pins (0–15).
     enum class Pins : uint8_t
     {
-        // Port A
         P0 = 0,
         P1 = 1,
         P2 = 2,
@@ -120,7 +119,7 @@ namespace gpio
     };
 
     /**
-     * @brief Alternate functions
+     * @brief Alternate functions.
      */
     enum class AlternateFunc : uint16_t
     {
@@ -145,10 +144,11 @@ namespace gpio
     /**
      * @brief Bitfield mask wrapper for a specific pin and configuration value.
      * 
-     * @tparam Tag The register tag.
+     * @tparam Tag        The register tag.
      * @tparam AccessFlag Access permission (RW, RO, etc.).
-     * @tparam EnumType Type of the configuration value (e.g., Mode, OutputType).
-     * @tparam Width Bit width per pin in the register.
+     * @tparam ValueType  Type of the configuration value (e.g., Mode, OutputType).
+     * @tparam Pin        Pin
+     * @tparam PosOffset  Position offset, in some cases you want starting position to be at 16 in reg(ex BSRR)
      */
     template<typename Tag, reg::BitFieldAccessFlag AccessFlag, uint8_t Width, typename ValueType, Pins Pin, uint8_t PosOffset = 0>
     struct PinMask : RegisterMask<Tag, AccessFlag, Width, static_cast<uint8_t>(Pin) * Width + PosOffset> 
@@ -156,7 +156,7 @@ namespace gpio
         /**
          * @brief Constructs a mask for a specific pin with a value.
          * 
-         * @param val Enum value to apply for that pin.
+         * @param val value to apply for that pin.
          */
         constexpr PinMask(ValueType val)
             : RegisterMask<Tag, AccessFlag, Width, static_cast<uint8_t>(Pin) * Width> {static_cast<uint32_t>(val)} 
@@ -170,7 +170,7 @@ namespace gpio
         /**
          * @brief Constructs a raw mask that covers only the pin's bitfield without a value.
          * 
-         * Useful for clear-only operations or for masking out bits, or for reading.
+         * Useful for clear-only operations, for masking out bits, or for reading.
          * 
          * @param pin GPIO pin number.
          */
@@ -210,6 +210,9 @@ namespace gpio
     template<Pins Pin>
     using BitResetMask = PinMask<gpio::BSRR_Tag, reg::BitFieldAccessFlag::RW, 1, bool, Pin, 16>;
 
+    /*
+        TODO: Implement LockMask and Lock register
+    */
     //using LockMask        = PinMask<gpio::LCKR_Tag, GPIO::PullType, 2>;
 
     /// @brief GPIO alternate function low mask (AFRL register, 4 bits per pin).
@@ -225,8 +228,7 @@ namespace gpio
 /**
  * @brief GPIO abstraction for a specific port.
  * 
- * Provides type-safe register access using static member types, allowing
- * fine-grained control of pin configuration and output/input.
+ * Static class.
  * 
  * @tparam Port GPIO port (A, B, C, etc.).
  */
@@ -236,7 +238,6 @@ class GpioRegs
     private:
         inline static constexpr uint32_t BASE_ADDR = static_cast<uint32_t>(Port);
     public:
-        /// @brief Default Constructor (does nothing).
         GpioRegs() = delete;
 
         /// @brief GPIO mode register.
@@ -269,87 +270,5 @@ class GpioRegs
         /// @brief Alternate function high register (pins 8–15).
         using AltFuncHighReg    = Register<gpio::AFRH_Tag,    BASE_ADDR + 0x24>;
 };
-
-/*template<gpio::Port Port>
-class GpioDrv
-{
-public:
-    GpioDrv() = delete; // Prevent instantiation, static-only usage
-
-    // Configure the mode of a pin (Input, Output, AltFunc, Analog)
-    inline static void set_mode(gpio::Pin pin, gpio::Mode mode)
-    {
-        auto mask = gpio::ModeMask(pin, mode);
-        GpioRegs<Port>::ModeReg::clear(mask);
-        GpioRegs<Port>::ModeReg::set(mask);
-    }
-
-    // Configure the output type of a pin (PushPull, OpenDrain)
-    inline static void set_output_type(gpio::Pin pin, gpio::OutputType type)
-    {
-        auto mask = gpio::OutputTypeMask(pin, type);
-        GpioRegs<Port>::OutputTypeReg::clear(mask);
-        GpioRegs<Port>::OutputTypeReg::set(mask);
-    }
-
-    // Configure the output speed of a pin (Low, Medium, Fast, High)
-    inline static void set_output_speed(gpio::Pin pin, gpio::OutputSpeed speed)
-    {
-        auto mask = gpio::OutputSpeedMask(pin, speed);
-        GpioRegs<Port>::OutputSpeedReg::clear(mask);
-        GpioRegs<Port>::OutputSpeedReg::set(mask);
-    }
-
-    // Configure the pull-up/pull-down resistors
-    inline static void set_pull_type(gpio::Pin pin, gpio::PullType pull)
-    {
-        auto mask = gpio::PullTypeMask(pin, pull);
-        GpioRegs<Port>::PullTypeReg::clear(mask);
-        GpioRegs<Port>::PullTypeReg::set(mask);
-    }
-
-    // Configure the alternate function (AF0 to AF15) for a pin
-    inline static void set_alternate_function(gpio::Pin pin, gpio::AlternateFunc af)
-    {
-        if (static_cast<uint8_t>(pin) <= 7)
-        {
-            auto mask = gpio::AltFuncLowMask(pin, af);
-            GpioRegs<Port>::AltFuncLowReg::clear(mask);
-            GpioRegs<Port>::AltFuncLowReg::set(mask);
-        }
-        else
-        {
-            auto mask = gpio::AltFuncHighMask(pin, af);
-            GpioRegs<Port>::AltFuncHighReg::clear(mask);
-            GpioRegs<Port>::AltFuncHighReg::set(mask);
-        }
-    }
-
-    // Read the input state of a pin (returns true if HIGH)
-    inline static bool read_pin(gpio::Pin pin)
-    {
-        auto mask = gpio::InputDataMask(pin);
-        uint32_t val = GpioRegs<Port>::InputDataReg::read(mask);
-        return (val != 0);
-    }
-
-    // Write a logic level to a pin (true = HIGH, false = LOW)
-    inline static void write_pin(gpio::Pin pin, bool value)
-    {
-        if (value)
-            GpioRegs<Port>::BitSetResetReg::set(gpio::BitSetResetMask(pin, true));
-        else
-            GpioRegs<Port>::BitSetResetReg::set(gpio::BitSetResetMask(static_cast<gpio::Pin>(static_cast<uint8_t>(pin) + 16), true));
-    }
-
-    // Toggle the output state of a pin
-    inline static void toggle_pin(gpio::Pin pin)
-    {
-        write_pin(pin, !read_pin(pin));
-    }
-};*/
-
-
-
 
 #endif

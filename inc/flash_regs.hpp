@@ -25,19 +25,17 @@ namespace flash
 };
 
 /**
- * @brief Flash registers abstraction.
+ * @brief FLASH registers abstraction.
  * 
- * Provides type-safe register access using static member types, allowing
- * fine-grained control of Flash registers.
+ * Static class
  */
- class FlashRegs
- {
-     private:
-        inline static constexpr uint32_t BASE_ADDR = 0x40023C00UL;
-     public:
-        FlashRegs() = delete;
-        
-        using AccessControlReg = Register<flash::ACR_Tag, BASE_ADDR + 0x00>;
- };
-
+class FlashRegs
+{
+    private:
+       inline static constexpr uint32_t BASE_ADDR = 0x40023C00UL;
+    public:
+       FlashRegs() = delete;
+       
+       using AccessControlReg = Register<flash::ACR_Tag, BASE_ADDR + 0x00>;
+};
 #endif

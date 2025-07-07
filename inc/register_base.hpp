@@ -8,6 +8,9 @@
 #include <assert.h>
 #include <type_traits>
 
+/**
+ * @brief Base register specific types.
+ */
 namespace reg
 {
     /**
@@ -15,43 +18,42 @@ namespace reg
      */
     enum class BitFieldAccessFlag : uint8_t 
     {
-        RO, ///< Read-only
-        WO, ///< Write-only
-        RW,  ///< Read/Write
-        RC_W0 // Read and Write 0 only
+        RO,   ///< Read-only
+        WO,   ///< Write-only
+        RW,   ///< Read/Write
+        RC_W0 ///< Read and Write 0 only
     };
 }
 
 /**
- * @brief Represents a strongly-typed bitfield mask for a specific hardware register.
+ * @brief Base RegisterMask that is used to construct other masks.
  *
- * This mask encodes width, position, and access control metadata at compile time, enabling
- * compile-time safety for read/write operations, and allowing composition of multiple bitfields.
  *
- * @tparam Tag         A type uniquely identifying the hardware register (must define Tag::id).
- * @tparam AccessFlag  Indicates the access permissions of the field (RO, WO, or RW).
+ * @tparam Tag         A type uniquely identifying the hardware register.
+ * @tparam AccessFlag  Access permissions of the field (RO, WO, or RW).
  * @tparam Width       Width of the bitfield in bits.
  * @tparam Position    Bit position (LSB index) of the field within the register.
+ * @tparam ValueType   Value type, since enum classes are used as a value but can also be raw uint type.
  * @tparam IsComposite Set to true if the mask represents a combination of multiple bitfields.
  */
 template<typename Tag, reg::BitFieldAccessFlag AccessFlag, uint32_t Width, uint32_t Position = 0, typename ValueType = uint32_t, bool IsComposite = false>
 struct RegisterMask
 {
-    /// @brief Final bitmask value (already shifted into position).
+    /// @brief Final bitmask value.
     uint32_t value{};
 
-    /// @brief Bitfield access type (RO, WO, or RW).
+    /// @brief Bitfield access type (RO, WO, RW...).
     static constexpr reg::BitFieldAccessFlag access_flag{AccessFlag};
 
     /// @brief Whether this is a composite mask created by combining other masks.
     static constexpr bool is_composite = IsComposite;
 
     /**
-     * @brief Constructs a register mask from an unshifted field value.
+     * @brief Constructs a register mask from the value.
      *
      * The value is masked and shifted into position based on template parameters.
      *
-     * @param val The unshifted field value to insert into the bitfield.
+     * @param val Value from which to construct mask.
      */
     constexpr RegisterMask(ValueType val)
         : value{(static_cast<uint32_t>(val) & ((Width < 32) ? ((1U << Width) - 1) : ~0U)) << Position} {}
@@ -61,23 +63,33 @@ struct RegisterMask
      *
      * The value is masked and shifted into position based on template parameters.
      *
-     * @param val The unshifted field value to insert into the bitfield.
      */
      constexpr RegisterMask()
      : value{(((Width < 32) ? ((1U << Width) - 1) : ~0UL)) << Position} {}
 
-    /*template<typename T, std::enable_if_t<std::is_enum_v<T> || std::is_integral_v<T>, int> = 0>
-    constexpr RegisterMask(T val)
-        : RegisterMask(static_cast<uint32_t>(val)) {}*/
-
     /**
-     * @brief Bitwise OR between two RegisterMasks with matching Tag and AccessFlag.
+     * @brief Combine two RegisterMask objects using bitwise OR.
      *
-     * This creates a composite mask (`IsComposite = true`) with `Width = 32` and `Position = 0`.
-     * Combining is allowed only if both masks reference the same register and access type.
+     * This function merges two RegisterMask instances into a single composite mask.
+     * The result is a new mask with:
+     *   - Composite flag set to true (`IsComposite = true`)
+     *   - Full register width (`Width = 32`)
+     *   - Position set to 0
+     *   - Value type set to `uint32_t`
      *
-     * @param other The other mask to combine with.
-     * @return New composite RegisterMask.
+     * Constraints:
+     *   - Both masks must reference the same register tag (`Tag`) and have the same access flag (`AccessFlag`)
+     *   - Intended for forming composite masks to be applied to full registers.
+     *
+     * @tparam OtherTag            Tag type of the other mask
+     * @tparam OtherAccessFlag     Access flag of the other mask
+     * @tparam OtherWidth          Width of the other mask
+     * @tparam OtherPosition       Bit position of the other mask
+     * @tparam OtherValueType      Value type of the other mask
+     * @tparam OtherIsComposite    Composite status of the other mask
+     * 
+     * @param other Another RegisterMask to combine with.
+     * @return A new composite RegisterMask combining both masks via bitwise OR.
      */
     template<typename OtherTag, reg::BitFieldAccessFlag OtherAccessFlag, uint32_t OtherWidth, uint32_t OtherPosition, typename OtherValueType, bool OtherIsComposite>
     constexpr RegisterMask<Tag, AccessFlag, 32, 0, uint32_t, true> operator|(const RegisterMask<OtherTag, OtherAccessFlag, OtherWidth, OtherPosition, OtherValueType, OtherIsComposite>& other) const
@@ -88,12 +100,28 @@ struct RegisterMask
     }
 
     /**
-     * @brief Bitwise AND between two RegisterMasks with matching Tag and AccessFlag.
+     * @brief Combine two RegisterMask objects using bitwise AND.
      *
-     * Creates a composite mask (`IsComposite = true`) with `Width = 32` and `Position = 0`.
+     * This function performs a bitwise AND between two RegisterMask instances and
+     * returns a new composite mask with the following properties:
+     *   - Composite flag set to true (`IsComposite = true`)
+     *   - Full register width (`Width = 32`)
+     *   - Bit position set to 0
+     *   - Value type set to `uint32_t`
      *
-     * @param other The other mask to combine with.
-     * @return New composite RegisterMask.
+     * Constraints:
+     *   - Both masks must reference the same register tag (`Tag`) and have the same access flag (`AccessFlag`)
+     *   - Intended for forming composite masks to be applied to full registers.
+     *
+     * @tparam OtherTag            Tag type of the other mask
+     * @tparam OtherAccessFlag     Access flag of the other mask
+     * @tparam OtherWidth          Width of the other mask
+     * @tparam OtherPosition       Bit position of the other mask
+     * @tparam OtherValueType      Value type of the other mask
+     * @tparam OtherIsComposite    Composite status of the other mask
+     *
+     * @param other Another RegisterMask to AND with
+     * @return A new composite RegisterMask representing the intersection
      */
     template<typename OtherTag, reg::BitFieldAccessFlag OtherAccessFlag, uint32_t OtherWidth, uint32_t OtherPosition,  typename OtherValueType, bool OtherIsComposite>
     constexpr RegisterMask<Tag, AccessFlag, 32, 0, uint32_t, true> operator&(const RegisterMask<OtherTag, OtherAccessFlag, OtherWidth, OtherPosition, OtherValueType, OtherIsComposite>& other) const
@@ -106,7 +134,7 @@ struct RegisterMask
     /**
      * @brief Implicit conversion to uint32_t for direct register operations.
      *
-     * @return The masked and shifted bitfield value.
+     * @return The masked value
      */
     constexpr operator uint32_t() const 
     {
@@ -115,9 +143,9 @@ struct RegisterMask
 };
 
 /**
- * @brief Represents a hardware register and provides safe accessors for field-level manipulation.
+ * @brief Base Register class for building concrete registers.
  *
- * All operations are type-safe and access-controlled using the `RegisterMask` system.
+ * All operations are access-controlled using the `RegisterMask`.
  *
  * @tparam Tag     A type uniquely identifying the register (used to match masks).
  * @tparam Address Physical address of the hardware register.
@@ -129,10 +157,11 @@ class Register
         Register() = delete;
     
         /**
-        * @brief Sets bits in the register (bitwise OR with mask).
-        *
-        * @param mask The bitfield mask to set.
-        */
+         * @brief Sets bits in the register (bitwise OR with mask).
+         *
+         * @param mask The `RegisterMask` to set.
+         * @return `StatusCode`.
+         */
         template<reg::BitFieldAccessFlag AccessFlag, uint32_t Width, uint32_t Position, typename ValueType, bool IsComposite>
         static inline StatusCode set(RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> mask) 
         {
@@ -143,10 +172,11 @@ class Register
         }
     
         /**
-        * @brief Clears bits in the register (bitwise AND with inverted mask).
-        *
-        * @param mask The bitfield mask to clear.
-        */
+         * @brief Clears bits in the register (bitwise AND with inverted mask).
+         *
+         * @param mask The `RegisterMask` to clear.
+         * @return `StatusCode`.
+         */
         template<reg::BitFieldAccessFlag AccessFlag, uint32_t Width, uint32_t Position, typename ValueType, bool IsComposite>
         static inline StatusCode clear(RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> mask) 
         {
@@ -157,10 +187,11 @@ class Register
         }
     
         /**
-        * @brief Overwrites the register with the given mask value.
-        *
-        * @param mask The full value to write into the register.
-        */
+         * @brief Overwrites the register with the given mask value.
+         *
+         * @param mask The `RegisterMask` to write and overwrite the register.
+         * @return `StatusCode`.
+         */
         template<reg::BitFieldAccessFlag AccessFlag, uint32_t Width, uint32_t Position, typename ValueType, bool IsComposite>
         static inline StatusCode write(RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> mask) 
         {
@@ -171,14 +202,14 @@ class Register
         }
     
         /**
-        * @brief Reads the value of the specified field from the register.
-        *
-        * For composite masks, returns the raw value masked (no shift).
-        * For non-composite fields, the value is shifted right into LSB position.
-        *
-        * @param mask The bitfield mask specifying the bits to read.
-        * @return Extracted field value (shifted if single field, unshifted if composite).
-        */
+         * @brief Reads the value of the specified field from the register.
+         *
+         * For composite masks, returns the raw value masked.
+         * For non-composite fields it returns actual value.
+         *
+         * @param mask The `RegisterMask` that represent which bit fields to read.
+         * @return Currently returns only uint32_t value.
+         */
         template<reg::BitFieldAccessFlag AccessFlag, uint32_t Width, uint32_t Position, typename ValueType, bool IsComposite>
         static inline uint32_t read(RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> mask) 
         {
@@ -190,6 +221,13 @@ class Register
                 return raw >> Position; // Shift for single-field masks
         }
 
+        /**
+         * @brief Returns the address of the associated hardware register.
+         *
+         * Useful for debugging, unit tests, or interacting with the peripheral at a lower level.
+         *
+         * @return The absolute register address as a `uint32_t`.
+         */
         static inline uint32_t get_addr() 
         {
             return (Addr);

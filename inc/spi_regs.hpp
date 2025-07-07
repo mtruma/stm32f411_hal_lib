@@ -7,9 +7,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-/**
- * @brief GPIO-related types and utilities for STM32-style GPIO peripheral access.
- */
 namespace spi
 {
     enum class Peripherals : uint32_t
@@ -145,6 +142,14 @@ namespace spi
 
     using DataMask               = RegisterMask<DR_Tag,  reg::BitFieldAccessFlag::RW, 16, 0,  uint16_t>;
 };
+
+/**
+ * @brief SPI abstraction.
+ * 
+ * Static class.
+ * 
+ * @tparam Periph Spi perihperal (SPI1, SPI2...).
+ */
 
 template<spi::Peripherals Periph>
 class SpiRegs

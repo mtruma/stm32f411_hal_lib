@@ -113,13 +113,6 @@ namespace dma
     template<typename Tag, reg::BitFieldAccessFlag AccessFlag, Streams Stream>
     struct StatusMask : RegisterMask<Tag, AccessFlag, 1, StatusFieldsPos[static_cast<uint8_t>(Stream)]> 
     {
-        /**
-         * @brief Constructs a raw mask that covers only the pin's bitfield without a value.
-         * 
-         * Useful for clear-only operations or for masking out bits, or for reading.
-         * 
-         * @param pin GPIO pin number.
-         */
         constexpr StatusMask()
             : RegisterMask<Tag, AccessFlag, 1, StatusFieldsPos[static_cast<uint8_t>(Stream)]>() 
         {
@@ -163,6 +156,13 @@ namespace dma
 
 };
 
+/**
+ * @brief FLASH registers abstraction.
+ * 
+ * Static class
+ *
+ * @tparam Periph DMA peripheral (DMA1, DMA2).
+ */
 template<dma::Peripherals Peripheral>
 class DmaRegs
 {

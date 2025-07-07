@@ -25,8 +25,7 @@ namespace pwr
 /**
  * @brief Power Controller registers abstraction.
  * 
- * Provides type-safe register access using static member types, allowing
- * fine-grained control of Power Controller registers.
+ * Static class.
  */
  class PowerCtrlRegs
  {
