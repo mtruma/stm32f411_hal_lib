@@ -1,2 +1,4 @@
-# stm32f411_hal_lib
-Educational purpose hal lib for stm32f411 mcu using modern c++.
+# HAL lib
+Header only hal lib for stm32f411 mcu.
+
+Work in progress..
