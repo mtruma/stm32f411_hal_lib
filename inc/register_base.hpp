@@ -211,17 +211,17 @@ class Register
          * @return A new `RegisterMask` containing the extracted value.
          */
         template<reg::BitFieldAccessFlag AccessFlag, uint32_t Width, uint32_t Position, typename ValueType, bool IsComposite>
-        static inline RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> read(RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> mask) 
+        static inline RegisterMask<Tag, AccessFlag, Width, Position, uint32_t, IsComposite> read(RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> mask) 
         {
             static_assert(AccessFlag != reg::BitFieldAccessFlag::WO, "Trying to read a write-only field");
             uint32_t raw = *reinterpret_cast<volatile uint32_t*>(Addr) & mask.value;
             if constexpr (IsComposite)
             {
-                return RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite>{ raw };
+                return RegisterMask<Tag, AccessFlag, Width, Position, uint32_t, IsComposite>{ raw };
             }
             else
             {
-                return RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite>{ raw >> Position };
+                return RegisterMask<Tag, AccessFlag, Width, Position, uint32_t, IsComposite>{ raw >> Position };
             }
         }
 
