@@ -208,17 +208,21 @@ class Register
          * For non-composite fields it returns actual value.
          *
          * @param mask The `RegisterMask` that represent which bit fields to read.
-         * @return Currently returns only uint32_t value.
+         * @return A new `RegisterMask` containing the extracted value.
          */
         template<reg::BitFieldAccessFlag AccessFlag, uint32_t Width, uint32_t Position, typename ValueType, bool IsComposite>
-        static inline uint32_t read(RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> mask) 
+        static inline RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> read(RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite> mask) 
         {
             static_assert(AccessFlag != reg::BitFieldAccessFlag::WO, "Trying to read a write-only field");
             uint32_t raw = *reinterpret_cast<volatile uint32_t*>(Addr) & mask.value;
             if constexpr (IsComposite)
-                return raw;  // No shift for composite masks
+            {
+                return RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite>{ raw };
+            }
             else
-                return raw >> Position; // Shift for single-field masks
+            {
+                return RegisterMask<Tag, AccessFlag, Width, Position, ValueType, IsComposite>{ raw >> Position };
+            }
         }
 
         /**
