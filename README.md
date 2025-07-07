@@ -21,7 +21,7 @@ Header only hal lib for stm32f411 mcu.
 📌 Roadmap:
  - [x] Implement base for building Registers and Register masks
  - [x] Add initial peripheral implementation
- - [ ] Add blink example
+ - [x] Add blink example
  - [ ] Implement fully all Peripherals
  - [ ] Remove CMSIS dependency (fully custom core + system init)
  - [ ] Add benchmarking examples
