@@ -1,5 +1,5 @@
-# HAL lib (WIP)
-Header only hal lib for stm32f411 mcu.
+# Low level lib (WIP)
+Header only low level lib for stm32f411 mcu.
 
 ✨ Features:
  - Include only
